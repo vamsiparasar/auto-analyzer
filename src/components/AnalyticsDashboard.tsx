@@ -105,43 +105,83 @@ export const AnalyticsDashboard = ({ data }: AnalyticsDashboardProps) => {
   return (
     <div className="space-y-8">
       {/* Summary Statistics */}
-      <Card className="p-6">
-        <div className="flex items-center justify-between mb-6">
-          <div className="flex items-center space-x-3">
-            <div className="w-8 h-8 bg-accent/10 rounded-lg flex items-center justify-center">
-              <TrendingUp className="w-4 h-4 text-accent" />
+      <Card className="p-6 animate-scale-in shadow-lg hover:shadow-xl transition-all duration-300 
+                     bg-gradient-to-br from-card via-card to-card/95 hover:scale-[1.01] group overflow-hidden relative">
+        <div className="flex items-center justify-between mb-6 relative z-10">
+          <div className="flex items-center space-x-3 group/header">
+            <div className="w-8 h-8 bg-accent/10 rounded-lg flex items-center justify-center
+                          transition-all duration-300 group-hover/header:scale-110 group-hover/header:bg-accent/20
+                          group-hover/header:shadow-lg group-hover/header:shadow-accent/25">
+              <TrendingUp className="w-4 h-4 text-accent transition-transform duration-300 group-hover/header:scale-110" />
             </div>
-            <div>
-              <h3 className="text-lg font-semibold">Summary Statistics</h3>
-              <p className="text-sm text-muted-foreground">Overview of your dataset</p>
+            <div className="transition-all duration-300 group-hover/header:scale-105">
+              <h3 className="text-lg font-semibold bg-gradient-to-r from-foreground to-foreground/80 bg-clip-text text-transparent">
+                Summary Statistics
+              </h3>
+              <p className="text-sm text-muted-foreground transition-colors duration-300 group-hover/header:text-muted-foreground/90">
+                Overview of your dataset
+              </p>
             </div>
           </div>
-          <Button variant="outline" size="sm">
-            <Download className="w-4 h-4 mr-2" />
+          <Button variant="outline" size="sm" className="transition-all duration-300 hover:scale-105 hover:shadow-md group/btn">
+            <Download className="w-4 h-4 mr-2 transition-transform duration-300 group-hover/btn:scale-110" />
             Export Report
           </Button>
         </div>
+        
+        {/* Animated background */}
+        <div className="absolute inset-0 bg-gradient-to-br from-accent/5 via-transparent to-primary/5 
+                        opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"></div>
 
-        <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-          <div className="bg-muted/30 rounded-lg p-4">
-            <div className="text-2xl font-bold text-primary">{summaryStats.totalRows.toLocaleString()}</div>
-            <div className="text-sm text-muted-foreground">Total Rows</div>
+        <div className="grid grid-cols-2 md:grid-cols-5 gap-4 relative z-10">
+          <div className="bg-gradient-to-br from-primary/10 to-primary/5 rounded-lg p-4 animate-fade-in 
+                        hover:shadow-md transition-all duration-300 hover:scale-105 group cursor-pointer border border-primary/10">
+            <div className="text-2xl font-bold text-primary transition-all duration-300 group-hover:scale-110">
+              {summaryStats.totalRows.toLocaleString()}
+            </div>
+            <div className="text-sm text-muted-foreground group-hover:text-muted-foreground/90 transition-colors duration-300">
+              Total Rows
+            </div>
           </div>
-          <div className="bg-muted/30 rounded-lg p-4">
-            <div className="text-2xl font-bold text-chart-2">{summaryStats.totalColumns}</div>
-            <div className="text-sm text-muted-foreground">Columns</div>
+          <div className="bg-gradient-to-br from-chart-2/10 to-chart-2/5 rounded-lg p-4 animate-fade-in 
+                        hover:shadow-md transition-all duration-300 hover:scale-105 group cursor-pointer border border-chart-2/10"
+               style={{ animationDelay: '0.1s' }}>
+            <div className="text-2xl font-bold text-chart-2 transition-all duration-300 group-hover:scale-110">
+              {summaryStats.totalColumns}
+            </div>
+            <div className="text-sm text-muted-foreground group-hover:text-muted-foreground/90 transition-colors duration-300">
+              Columns
+            </div>
           </div>
-          <div className="bg-muted/30 rounded-lg p-4">
-            <div className="text-2xl font-bold text-chart-3">{summaryStats.numericColumns}</div>
-            <div className="text-sm text-muted-foreground">Numeric</div>
+          <div className="bg-gradient-to-br from-chart-3/10 to-chart-3/5 rounded-lg p-4 animate-fade-in 
+                        hover:shadow-md transition-all duration-300 hover:scale-105 group cursor-pointer border border-chart-3/10"
+               style={{ animationDelay: '0.2s' }}>
+            <div className="text-2xl font-bold text-chart-3 transition-all duration-300 group-hover:scale-110">
+              {summaryStats.numericColumns}
+            </div>
+            <div className="text-sm text-muted-foreground group-hover:text-muted-foreground/90 transition-colors duration-300">
+              Numeric
+            </div>
           </div>
-          <div className="bg-muted/30 rounded-lg p-4">
-            <div className="text-2xl font-bold text-chart-4">{summaryStats.categoricalColumns}</div>
-            <div className="text-sm text-muted-foreground">Categorical</div>
+          <div className="bg-gradient-to-br from-chart-4/10 to-chart-4/5 rounded-lg p-4 animate-fade-in 
+                        hover:shadow-md transition-all duration-300 hover:scale-105 group cursor-pointer border border-chart-4/10"
+               style={{ animationDelay: '0.3s' }}>
+            <div className="text-2xl font-bold text-chart-4 transition-all duration-300 group-hover:scale-110">
+              {summaryStats.categoricalColumns}
+            </div>
+            <div className="text-sm text-muted-foreground group-hover:text-muted-foreground/90 transition-colors duration-300">
+              Categorical
+            </div>
           </div>
-          <div className="bg-muted/30 rounded-lg p-4">
-            <div className="text-2xl font-bold text-destructive">{summaryStats.missingValues}</div>
-            <div className="text-sm text-muted-foreground">Missing Values</div>
+          <div className="bg-gradient-to-br from-destructive/10 to-destructive/5 rounded-lg p-4 animate-fade-in 
+                        hover:shadow-md transition-all duration-300 hover:scale-105 group cursor-pointer border border-destructive/10"
+               style={{ animationDelay: '0.4s' }}>
+            <div className="text-2xl font-bold text-destructive transition-all duration-300 group-hover:scale-110">
+              {summaryStats.missingValues}
+            </div>
+            <div className="text-sm text-muted-foreground group-hover:text-muted-foreground/90 transition-colors duration-300">
+              Missing Values
+            </div>
           </div>
         </div>
 
