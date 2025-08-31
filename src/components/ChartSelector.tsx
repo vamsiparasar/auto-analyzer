@@ -24,7 +24,21 @@ export type ChartType =
   | 'boxplot' 
   | 'heatmap' 
   | 'radar'
-  | 'treemap';
+  | 'treemap'
+  | 'bullet'
+  | 'bubble'
+  | 'funnel'
+  | 'waterfall'
+  | 'donut'
+  | 'sankey'
+  | 'gantt'
+  | 'gauge'
+  | 'stacked-area'
+  | 'stacked-bar'
+  | 'venn'
+  | 'sunburst'
+  | 'column'
+  | 'map';
 
 interface ChartSelectorProps {
   onChartAdd: (chartType: ChartType, column?: string) => void;
@@ -52,6 +66,24 @@ export const ChartSelector = ({
       requiresColumns: categoricalColumns.length > 0
     },
     {
+      type: 'column' as ChartType,
+      name: 'Column Chart',
+      icon: BarChart3,
+      description: 'Vertical bar chart',
+      color: 'chart-1',
+      bestFor: 'Categorical data',
+      requiresColumns: categoricalColumns.length > 0
+    },
+    {
+      type: 'stacked-bar' as ChartType,
+      name: 'Stacked Bar',
+      icon: BarChart3,
+      description: 'Stacked categories',
+      color: 'chart-1',
+      bestFor: 'Multi-series',
+      requiresColumns: categoricalColumns.length > 0 && numericColumns.length > 1
+    },
+    {
       type: 'line' as ChartType,
       name: 'Line Chart',
       icon: LineChart,
@@ -70,6 +102,15 @@ export const ChartSelector = ({
       requiresColumns: categoricalColumns.length > 0
     },
     {
+      type: 'donut' as ChartType,
+      name: 'Donut Chart',
+      icon: PieChart,
+      description: 'Hollow pie chart',
+      color: 'chart-3',
+      bestFor: 'Part-to-whole',
+      requiresColumns: categoricalColumns.length > 0
+    },
+    {
       type: 'scatter' as ChartType,
       name: 'Scatter Plot',
       icon: ScatterChart,
@@ -79,6 +120,15 @@ export const ChartSelector = ({
       requiresColumns: numericColumns.length >= 2
     },
     {
+      type: 'bubble' as ChartType,
+      name: 'Bubble Chart',
+      icon: ScatterChart,
+      description: '3D scatter plot',
+      color: 'chart-4',
+      bestFor: '3D relationships',
+      requiresColumns: numericColumns.length >= 3
+    },
+    {
       type: 'area' as ChartType,
       name: 'Area Chart',
       icon: TrendingUp,
@@ -86,6 +136,15 @@ export const ChartSelector = ({
       color: 'chart-5',
       bestFor: 'Cumulative data',
       requiresColumns: numericColumns.length > 0
+    },
+    {
+      type: 'stacked-area' as ChartType,
+      name: 'Stacked Area',
+      icon: TrendingUp,
+      description: 'Multi-series area',
+      color: 'chart-5',
+      bestFor: 'Multi-series trends',
+      requiresColumns: numericColumns.length > 1
     },
     {
       type: 'histogram' as ChartType,
@@ -113,6 +172,105 @@ export const ChartSelector = ({
       color: 'secondary',
       bestFor: 'Correlations',
       requiresColumns: numericColumns.length >= 2
+    },
+    {
+      type: 'treemap' as ChartType,
+      name: 'TreeMap',
+      icon: Grid,
+      description: 'Hierarchical data',
+      color: 'chart-1',
+      bestFor: 'Hierarchical data',
+      requiresColumns: categoricalColumns.length > 0
+    },
+    {
+      type: 'sunburst' as ChartType,
+      name: 'Sunburst',
+      icon: PieChart,
+      description: 'Nested pie chart',
+      color: 'chart-3',
+      bestFor: 'Hierarchical data',
+      requiresColumns: categoricalColumns.length > 0
+    },
+    {
+      type: 'funnel' as ChartType,
+      name: 'Funnel Chart',
+      icon: TrendingUp,
+      description: 'Process stages',
+      color: 'chart-2',
+      bestFor: 'Process flow',
+      requiresColumns: categoricalColumns.length > 0
+    },
+    {
+      type: 'waterfall' as ChartType,
+      name: 'Waterfall',
+      icon: BarChart3,
+      description: 'Cumulative effect',
+      color: 'chart-4',
+      bestFor: 'Change analysis',
+      requiresColumns: numericColumns.length > 0
+    },
+    {
+      type: 'bullet' as ChartType,
+      name: 'Bullet Graph',
+      icon: Activity,
+      description: 'Performance vs target',
+      color: 'chart-5',
+      bestFor: 'KPI tracking',
+      requiresColumns: numericColumns.length >= 2
+    },
+    {
+      type: 'gauge' as ChartType,
+      name: 'Gauge Chart',
+      icon: Activity,
+      description: 'Single metric',
+      color: 'primary',
+      bestFor: 'Single KPI',
+      requiresColumns: numericColumns.length > 0
+    },
+    {
+      type: 'radar' as ChartType,
+      name: 'Radar Chart',
+      icon: Grid,
+      description: 'Multi-dimensional',
+      color: 'accent',
+      bestFor: 'Multi-criteria',
+      requiresColumns: numericColumns.length >= 3
+    },
+    {
+      type: 'sankey' as ChartType,
+      name: 'Sankey Diagram',
+      icon: TrendingUp,
+      description: 'Flow visualization',
+      color: 'secondary',
+      bestFor: 'Flow analysis',
+      requiresColumns: categoricalColumns.length >= 2
+    },
+    {
+      type: 'gantt' as ChartType,
+      name: 'Gantt Chart',
+      icon: BarChart3,
+      description: 'Timeline view',
+      color: 'chart-2',
+      bestFor: 'Project timeline',
+      requiresColumns: categoricalColumns.length > 0 && numericColumns.length > 0
+    },
+    {
+      type: 'venn' as ChartType,
+      name: 'Venn Diagram',
+      icon: Grid,
+      description: 'Set relationships',
+      color: 'chart-4',
+      bestFor: 'Set analysis',
+      requiresColumns: categoricalColumns.length >= 2
+    },
+    {
+      type: 'map' as ChartType,
+      name: 'Map Chart',
+      icon: MapPin,
+      description: 'Geographic data',
+      color: 'chart-5',
+      bestFor: 'Geographic analysis',
+      requiresColumns: categoricalColumns.length > 0
     }
   ];
 

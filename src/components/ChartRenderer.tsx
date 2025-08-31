@@ -284,6 +284,75 @@ export const ChartRenderer = ({
             <Bar dataKey="count" fill={COLORS[0]} radius={[2, 2, 0, 0]} />
           </BarChart>
         );
+
+      case 'column':
+        return (
+          <BarChart data={chartData} layout="horizontal">
+            <CartesianGrid strokeDasharray="3 3" className="opacity-30" />
+            <XAxis 
+              dataKey="name" 
+              fontSize={12}
+              tick={{ fill: 'hsl(var(--muted-foreground))' }}
+            />
+            <YAxis 
+              fontSize={12}
+              tick={{ fill: 'hsl(var(--muted-foreground))' }}
+            />
+            <Tooltip 
+              contentStyle={{
+                backgroundColor: 'hsl(var(--card))',
+                border: '1px solid hsl(var(--border))',
+                borderRadius: '8px'
+              }}
+            />
+            <Bar dataKey="value" fill={COLORS[1]} radius={[4, 4, 0, 0]} />
+          </BarChart>
+        );
+
+      case 'donut':
+        return (
+          <PieChart>
+            <Pie
+              data={chartData}
+              cx="50%"
+              cy="50%"
+              outerRadius={80}
+              innerRadius={40}
+              fill={COLORS[2]}
+              dataKey="value"
+              label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+            >
+              {chartData.map((entry, index) => (
+                <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+              ))}
+            </Pie>
+            <Tooltip />
+          </PieChart>
+        );
+
+      case 'bubble':
+      case 'stacked-bar':
+      case 'stacked-area':
+      case 'funnel':
+      case 'waterfall':
+      case 'bullet':
+      case 'gauge':
+      case 'radar':
+      case 'sankey':
+      case 'gantt':
+      case 'venn':
+      case 'sunburst':
+      case 'treemap':
+      case 'map':
+        return (
+          <div className="h-full flex items-center justify-center text-muted-foreground">
+            <div className="text-center">
+              <div className="text-4xl mb-2">📊</div>
+              <div className="font-medium">{chartType.charAt(0).toUpperCase() + chartType.slice(1)} Chart</div>
+              <div className="text-sm mt-1">Advanced chart coming soon</div>
+            </div>
+          </div>
+        );
         
       default:
         return <div>Chart type not supported</div>;
