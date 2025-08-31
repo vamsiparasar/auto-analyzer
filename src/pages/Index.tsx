@@ -2,22 +2,33 @@ import { useState } from "react";
 import { Header } from "@/components/Header";
 import { FileUpload } from "@/components/FileUpload";
 import { DataPreview } from "@/components/DataPreview";
-import { AnalyticsDashboard } from "@/components/AnalyticsDashboard";
+import { MissingValueHandler } from "@/components/MissingValueHandler";
+import { EDASummary } from "@/components/EDASummary";
+import { CustomDashboard } from "@/components/CustomDashboard";
 import { Toaster } from "@/components/ui/sonner";
 
 const Index = () => {
   const [uploadedData, setUploadedData] = useState<any>(null);
+  const [cleanedData, setCleanedData] = useState<any>(null);
   const [fileName, setFileName] = useState<string>("");
 
   const handleFileUpload = (data: any, name: string) => {
     setUploadedData(data);
+    setCleanedData(null);
     setFileName(name);
+  };
+
+  const handleDataCleaned = (data: any) => {
+    setCleanedData(data);
   };
 
   const handleReset = () => {
     setUploadedData(null);
+    setCleanedData(null);
     setFileName("");
   };
+
+  const currentData = cleanedData || uploadedData;
 
   return (
     <div className="min-h-screen bg-background">
@@ -74,8 +85,20 @@ const Index = () => {
             
             <div className="space-y-8">
               <DataPreview data={uploadedData} />
+              
+              <div className="animate-slide-up" style={{ animationDelay: '0.1s' }}>
+                <MissingValueHandler 
+                  data={uploadedData} 
+                  onDataCleaned={handleDataCleaned}
+                />
+              </div>
+              
               <div className="animate-slide-up" style={{ animationDelay: '0.2s' }}>
-                <AnalyticsDashboard data={uploadedData} />
+                <EDASummary data={currentData} />
+              </div>
+              
+              <div className="animate-slide-up" style={{ animationDelay: '0.3s' }}>
+                <CustomDashboard data={currentData} />
               </div>
             </div>
           </div>
