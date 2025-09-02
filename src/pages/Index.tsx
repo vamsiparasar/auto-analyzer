@@ -5,6 +5,9 @@ import { DataPreview } from "@/components/DataPreview";
 import { MissingValueHandler } from "@/components/MissingValueHandler";
 import { EDASummary } from "@/components/EDASummary";
 import { CustomDashboard } from "@/components/CustomDashboard";
+import { AIInsights } from "@/components/AIInsights";
+import { SmartChartRecommendations } from "@/components/SmartChartRecommendations";
+import { DataQualityScanner } from "@/components/DataQualityScanner";
 import { Toaster } from "@/components/ui/sonner";
 
 const Index = () => {
@@ -87,17 +90,38 @@ const Index = () => {
               <DataPreview data={uploadedData} />
               
               <div className="animate-slide-up" style={{ animationDelay: '0.1s' }}>
+                <DataQualityScanner 
+                  data={uploadedData} 
+                  onDataCleaned={handleDataCleaned}
+                />
+              </div>
+
+              <div className="animate-slide-up" style={{ animationDelay: '0.15s' }}>
                 <MissingValueHandler 
                   data={uploadedData} 
                   onDataCleaned={handleDataCleaned}
                 />
               </div>
-              
+
               <div className="animate-slide-up" style={{ animationDelay: '0.2s' }}>
-                <EDASummary data={currentData} />
+                <AIInsights data={currentData} />
               </div>
               
+              <div className="animate-slide-up" style={{ animationDelay: '0.25s' }}>
+                <EDASummary data={currentData} />
+              </div>
+
               <div className="animate-slide-up" style={{ animationDelay: '0.3s' }}>
+                <SmartChartRecommendations 
+                  data={currentData}
+                  onChartAdd={(chartType, column) => {
+                    // This will be handled by the CustomDashboard component
+                    console.log('Chart recommendation:', chartType, column);
+                  }}
+                />
+              </div>
+              
+              <div className="animate-slide-up" style={{ animationDelay: '0.35s' }}>
                 <CustomDashboard data={currentData} />
               </div>
             </div>
