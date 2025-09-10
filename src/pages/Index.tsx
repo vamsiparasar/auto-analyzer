@@ -8,6 +8,7 @@ import { CustomDashboard } from "@/components/CustomDashboard";
 import { AIInsights } from "@/components/AIInsights";
 import { SmartChartRecommendations } from "@/components/SmartChartRecommendations";
 import { DataQualityScanner } from "@/components/DataQualityScanner";
+import { AdvancedAnalytics } from "@/components/AdvancedAnalytics";
 import { Toaster } from "@/components/ui/sonner";
 
 const Index = () => {
@@ -123,6 +124,10 @@ const Index = () => {
               
               <div className="animate-slide-up" style={{ animationDelay: '0.35s' }}>
                 <CustomDashboard data={currentData} />
+              </div>
+
+              <div className="animate-slide-up" style={{ animationDelay: '0.4s' }}>
+                <AdvancedAnalytics data={currentData} />
               </div>
             </div>
           </div>
