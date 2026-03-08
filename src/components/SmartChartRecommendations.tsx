@@ -161,7 +161,7 @@ export const SmartChartRecommendations = ({ data, onChartAdd }: SmartChartRecomm
                   </div>
                 </div>
                 <div className="flex items-center gap-0.5">
-                  <Star className="w-3 h-3 text-yellow-500" />
+                  <Star className="w-3 h-3 text-chart-3" />
                   <span className={`text-xs font-medium ${rec.confidence >= 90 ? 'text-accent' : rec.confidence >= 75 ? 'text-chart-3' : 'text-muted-foreground'}`}>
                     {rec.confidence}%
                   </span>
