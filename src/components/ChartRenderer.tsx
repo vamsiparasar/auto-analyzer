@@ -496,17 +496,6 @@ export const ChartRenderer = ({
             dataKey="size"
             aspectRatio={4 / 3}
             stroke="hsl(var(--background))"
-            content={({ x, y, width, height, name, fill }: any) => (
-              <g>
-                <rect x={x} y={y} width={width} height={height} fill={fill} stroke="hsl(var(--background))" strokeWidth={2} rx={4} />
-                {width > 40 && height > 20 && (
-                  <text x={x + width / 2} y={y + height / 2} textAnchor="middle" dominantBaseline="middle"
-                    fill="white" fontSize={11} fontWeight={500}>
-                    {name}
-                  </text>
-                )}
-              </g>
-            )}
           />
         );
 
