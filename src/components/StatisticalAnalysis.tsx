@@ -1,397 +1,287 @@
-import { useState, useEffect } from "react";
+import { useMemo, useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Area, AreaChart } from 'recharts';
-import { Calculator, TrendingUp, AlertTriangle, Target, BarChart3, PieChart } from "lucide-react";
+import { useDataAnalysis, calculateCorrelation } from "@/hooks/useDataAnalysis";
+import {
+  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip,
+  ResponsiveContainer, Cell
+} from "recharts";
+import {
+  BarChart3, TrendingUp, Hash, Activity,
+  ArrowUpRight, ArrowDownRight, Minus
+} from "lucide-react";
 
 interface StatisticalAnalysisProps {
   data: any[];
-  type: 'descriptive' | 'diagnostic' | 'prescriptive' | 'comprehensive';
 }
 
-interface ColumnStats {
-  column: string;
-  type: 'numeric' | 'categorical';
-  count: number;
-  missing: number;
-  unique: number;
-  mean?: number;
-  median?: number;
-  mode?: string | number;
-  std?: number;
-  min?: number;
-  max?: number;
-  q1?: number;
-  q3?: number;
-  skewness?: number;
-  kurtosis?: number;
-  distribution?: any[];
-}
+const ProgressRing = ({ percent, size = 48, strokeWidth = 4 }: { percent: number; size?: number; strokeWidth?: number }) => {
+  const radius = (size - strokeWidth) / 2;
+  const circumference = 2 * Math.PI * radius;
+  const offset = circumference * (1 - percent / 100);
+  const color = percent >= 90 ? 'hsl(var(--accent))' : percent >= 70 ? 'hsl(var(--chart-3))' : 'hsl(var(--destructive))';
 
-export const StatisticalAnalysis = ({ data, type }: StatisticalAnalysisProps) => {
-  const [statistics, setStatistics] = useState<ColumnStats[]>([]);
-  const [correlations, setCorrelations] = useState<any[]>([]);
-  const [insights, setInsights] = useState<string[]>([]);
+  return (
+    <svg width={size} height={size} className="transform -rotate-90">
+      <circle cx={size / 2} cy={size / 2} r={radius} fill="none"
+        stroke="hsl(var(--muted))" strokeWidth={strokeWidth} />
+      <circle cx={size / 2} cy={size / 2} r={radius} fill="none"
+        stroke={color} strokeWidth={strokeWidth}
+        strokeDasharray={circumference} strokeDashoffset={offset}
+        strokeLinecap="round"
+        className="transition-all duration-1000 ease-out" />
+      <text x={size / 2} y={size / 2} textAnchor="middle" dominantBaseline="central"
+        className="fill-foreground text-[10px] font-semibold" transform={`rotate(90 ${size / 2} ${size / 2})`}>
+        {percent.toFixed(0)}%
+      </text>
+    </svg>
+  );
+};
 
-  useEffect(() => {
-    if (data && data.length > 0) {
-      analyzeData();
-    }
-  }, [data, type]);
+const HeatmapCell = ({ value, label }: { value: number; label: string }) => {
+  const intensity = Math.abs(value);
+  const bgColor = value > 0
+    ? `hsl(var(--accent) / ${intensity * 0.7 + 0.05})`
+    : value < 0
+    ? `hsl(var(--destructive) / ${intensity * 0.7 + 0.05})`
+    : 'hsl(var(--muted) / 0.3)';
 
-  const analyzeData = () => {
-    const columns = Object.keys(data[0]);
-    const stats: ColumnStats[] = [];
+  return (
+    <div
+      className="aspect-square flex items-center justify-center rounded-md text-[10px] font-medium cursor-pointer transition-all duration-200 hover:scale-110 hover:shadow-md border border-transparent hover:border-foreground/10"
+      style={{ backgroundColor: bgColor }}
+      title={`${label}: ${(value * 100).toFixed(1)}%`}
+    >
+      {Math.abs(value) > 0.01 ? (value > 0 ? '+' : '') + (value * 100).toFixed(0) : '—'}
+    </div>
+  );
+};
 
-    columns.forEach(col => {
-      const values = data.map(row => row[col]).filter(val => val != null && val !== '');
-      const numericValues = values.map(v => parseFloat(v)).filter(v => !isNaN(v));
-      const isNumeric = numericValues.length > values.length * 0.8;
+export const StatisticalAnalysis = ({ data }: StatisticalAnalysisProps) => {
+  const { numericColumns, columnStats } = useDataAnalysis(data);
+  const [selectedCol, setSelectedCol] = useState<string | null>(null);
 
-      if (isNumeric && numericValues.length > 0) {
-        const sorted = numericValues.sort((a, b) => a - b);
-        const mean = numericValues.reduce((sum, val) => sum + val, 0) / numericValues.length;
-        const variance = numericValues.reduce((sum, val) => sum + Math.pow(val - mean, 2), 0) / numericValues.length;
-        const std = Math.sqrt(variance);
-        
-        const q1 = sorted[Math.floor(sorted.length * 0.25)];
-        const median = sorted[Math.floor(sorted.length * 0.5)];
-        const q3 = sorted[Math.floor(sorted.length * 0.75)];
-
-        // Calculate skewness and kurtosis
-        const skewness = numericValues.reduce((sum, val) => sum + Math.pow((val - mean) / std, 3), 0) / numericValues.length;
-        const kurtosis = numericValues.reduce((sum, val) => sum + Math.pow((val - mean) / std, 4), 0) / numericValues.length - 3;
-
-        // Create distribution for histogram
-        const bins = 10;
-        const binSize = (Math.max(...numericValues) - Math.min(...numericValues)) / bins;
-        const distribution = Array.from({ length: bins }, (_, i) => {
-          const binStart = Math.min(...numericValues) + i * binSize;
-          const binEnd = binStart + binSize;
-          const count = numericValues.filter(val => val >= binStart && val < binEnd).length;
-          return { bin: `${binStart.toFixed(1)}-${binEnd.toFixed(1)}`, count };
-        });
-
-        stats.push({
-          column: col,
-          type: 'numeric',
-          count: values.length,
-          missing: data.length - values.length,
-          unique: new Set(values).size,
-          mean,
-          median,
-          std,
-          min: Math.min(...numericValues),
-          max: Math.max(...numericValues),
-          q1,
-          q3,
-          skewness,
-          kurtosis,
-          distribution
-        });
-      } else {
-        // Categorical analysis
-        const valueCounts = values.reduce((acc, val) => {
-          acc[val] = (acc[val] || 0) + 1;
-          return acc;
-        }, {} as Record<string, number>);
-
-        const mode = Object.entries(valueCounts).reduce((a, b) => valueCounts[a[0]] > valueCounts[b[0]] ? a : b)[0];
-
-        stats.push({
-          column: col,
-          type: 'categorical',
-          count: values.length,
-          missing: data.length - values.length,
-          unique: new Set(values).size,
-          mode
-        });
-      }
+  const distributionData = useMemo(() => {
+    const col = selectedCol || numericColumns[0];
+    if (!col) return [];
+    const values = data.map(row => parseFloat(row[col])).filter(v => !isNaN(v));
+    if (values.length === 0) return [];
+    const min = Math.min(...values);
+    const max = Math.max(...values);
+    const binCount = Math.min(20, Math.ceil(Math.sqrt(values.length)));
+    const binSize = (max - min) / binCount || 1;
+    const bins = Array.from({ length: binCount }, (_, i) => ({
+      range: `${(min + i * binSize).toFixed(1)}`,
+      count: 0,
+    }));
+    values.forEach(v => {
+      const idx = Math.min(Math.floor((v - min) / binSize), binCount - 1);
+      bins[idx].count++;
     });
+    return bins;
+  }, [data, numericColumns, selectedCol]);
 
-    setStatistics(stats);
-    
-    // Calculate correlations for numeric columns
-    calculateCorrelations(stats.filter(s => s.type === 'numeric'));
-    
-    // Generate insights based on type
-    generateInsights(stats);
-  };
+  const correlationMatrix = useMemo(() => {
+    const cols = numericColumns.slice(0, 8);
+    return cols.map(col1 =>
+      cols.map(col2 => col1 === col2 ? 1 : calculateCorrelation(data, col1, col2))
+    );
+  }, [data, numericColumns]);
 
-  const calculateCorrelations = (numericStats: ColumnStats[]) => {
-    const correlationMatrix: any[] = [];
-    
-    for (let i = 0; i < numericStats.length; i++) {
-      for (let j = i + 1; j < numericStats.length; j++) {
-        const col1 = numericStats[i].column;
-        const col2 = numericStats[j].column;
-        
-        const correlation = calculatePearsonCorrelation(col1, col2);
-        
-        correlationMatrix.push({
-          col1,
-          col2,
-          correlation: correlation,
-          strength: Math.abs(correlation) > 0.7 ? 'Strong' : Math.abs(correlation) > 0.3 ? 'Moderate' : 'Weak'
-        });
-      }
-    }
-    
-    setCorrelations(correlationMatrix.sort((a, b) => Math.abs(b.correlation) - Math.abs(a.correlation)));
-  };
+  const boxPlotData = useMemo(() => {
+    return numericColumns.slice(0, 6).map(col => {
+      const stats = columnStats[col];
+      if (!stats) return null;
+      return {
+        name: col.length > 12 ? col.slice(0, 12) + '…' : col,
+        fullName: col,
+        median: stats.median,
+        iqrHeight: stats.q3 - stats.q1,
+        base: stats.q1,
+      };
+    }).filter(Boolean);
+  }, [numericColumns, columnStats]);
 
-  const calculatePearsonCorrelation = (col1: string, col2: string): number => {
-    const pairs = data
-      .map(row => [parseFloat(row[col1]), parseFloat(row[col2])])
-      .filter(([x, y]) => !isNaN(x) && !isNaN(y));
-    
-    if (pairs.length < 2) return 0;
-    
-    const n = pairs.length;
-    const sumX = pairs.reduce((sum, [x]) => sum + x, 0);
-    const sumY = pairs.reduce((sum, [, y]) => sum + y, 0);
-    const sumXY = pairs.reduce((sum, [x, y]) => sum + x * y, 0);
-    const sumX2 = pairs.reduce((sum, [x]) => sum + x * x, 0);
-    const sumY2 = pairs.reduce((sum, [, y]) => sum + y * y, 0);
-    
-    const numerator = n * sumXY - sumX * sumY;
-    const denominator = Math.sqrt((n * sumX2 - sumX * sumX) * (n * sumY2 - sumY * sumY));
-    
-    return denominator === 0 ? 0 : numerator / denominator;
-  };
-
-  const generateInsights = (stats: ColumnStats[]) => {
-    const insights: string[] = [];
-    
-    if (type === 'descriptive' || type === 'comprehensive') {
-      const numericCols = stats.filter(s => s.type === 'numeric');
-      const categoricalCols = stats.filter(s => s.type === 'categorical');
-      
-      insights.push(`Dataset contains ${numericCols.length} numeric and ${categoricalCols.length} categorical variables`);
-      
-      const highMissingCols = stats.filter(s => (s.missing / data.length) > 0.1);
-      if (highMissingCols.length > 0) {
-        insights.push(`${highMissingCols.length} columns have >10% missing values`);
-      }
-      
-      const skewedCols = numericCols.filter(s => Math.abs(s.skewness || 0) > 1);
-      if (skewedCols.length > 0) {
-        insights.push(`${skewedCols.length} numeric columns show significant skewness`);
-      }
-    }
-    
-    if (type === 'diagnostic' || type === 'comprehensive') {
-      const outlierCols = stats.filter(s => s.type === 'numeric').filter(s => {
-        const iqr = (s.q3 || 0) - (s.q1 || 0);
-        const lowerBound = (s.q1 || 0) - 1.5 * iqr;
-        const upperBound = (s.q3 || 0) + 1.5 * iqr;
-        return (s.min || 0) < lowerBound || (s.max || 0) > upperBound;
-      });
-      
-      if (outlierCols.length > 0) {
-        insights.push(`Potential outliers detected in ${outlierCols.length} columns`);
-      }
-      
-      const strongCorrs = correlations.filter(c => Math.abs(c.correlation) > 0.7);
-      if (strongCorrs.length > 0) {
-        insights.push(`${strongCorrs.length} strong correlations found - potential multicollinearity`);
-      }
-    }
-    
-    if (type === 'prescriptive' || type === 'comprehensive') {
-      const highCardinalityCols = stats.filter(s => s.type === 'categorical' && s.unique > 20);
-      if (highCardinalityCols.length > 0) {
-        insights.push(`Consider encoding or grouping high cardinality categorical variables`);
-      }
-      
-      const normalDistCols = stats.filter(s => 
-        s.type === 'numeric' && Math.abs(s.skewness || 0) < 0.5 && Math.abs(s.kurtosis || 0) < 3
-      );
-      if (normalDistCols.length > 0) {
-        insights.push(`${normalDistCols.length} columns appear normally distributed - suitable for parametric tests`);
-      }
-    }
-    
-    setInsights(insights);
-  };
-
-  const getAnalysisTitle = () => {
-    switch (type) {
-      case 'descriptive': return 'Descriptive Analytics';
-      case 'diagnostic': return 'Diagnostic Analytics';
-      case 'prescriptive': return 'Prescriptive Analytics';
-      default: return 'Comprehensive Statistical Analysis';
-    }
-  };
-
-  const getAnalysisIcon = () => {
-    switch (type) {
-      case 'descriptive': return <BarChart3 className="w-4 h-4" />;
-      case 'diagnostic': return <Target className="w-4 h-4" />;
-      case 'prescriptive': return <TrendingUp className="w-4 h-4" />;
-      default: return <Calculator className="w-4 h-4" />;
-    }
-  };
+  const displayCols = numericColumns.slice(0, 8);
+  const GRADIENT_COLORS = ['hsl(var(--chart-1))', 'hsl(var(--chart-2))', 'hsl(var(--chart-3))', 'hsl(var(--chart-4))', 'hsl(var(--chart-5))'];
 
   return (
     <div className="space-y-6">
-      <Card className="p-6">
-        <div className="flex items-center space-x-3 mb-6">
-          <div className="w-8 h-8 bg-gradient-to-br from-primary/20 to-accent/20 rounded-lg flex items-center justify-center">
-            {getAnalysisIcon()}
+      <Tabs defaultValue="overview" className="w-full">
+        <TabsList className="mb-4 bg-muted/50 p-1 rounded-xl">
+          <TabsTrigger value="overview" className="rounded-lg text-xs">Overview</TabsTrigger>
+          <TabsTrigger value="distributions" className="rounded-lg text-xs">Distributions</TabsTrigger>
+          <TabsTrigger value="correlations" className="rounded-lg text-xs">Correlations</TabsTrigger>
+          <TabsTrigger value="boxplots" className="rounded-lg text-xs">Box Plots</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="overview">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {numericColumns.map((col, idx) => {
+              const stats = columnStats[col];
+              if (!stats) return null;
+              const completeness = 100 - stats.missingPercentage;
+              const trendIcon = stats.mean > stats.median
+                ? <ArrowUpRight className="w-3 h-3 text-accent" />
+                : stats.mean < stats.median
+                ? <ArrowDownRight className="w-3 h-3 text-destructive" />
+                : <Minus className="w-3 h-3 text-muted-foreground" />;
+
+              return (
+                <Card key={col} className="p-4 space-y-3 animate-fade-in cursor-pointer transition-all duration-300 hover:shadow-md hover:border-primary/20"
+                  style={{ animationDelay: `${idx * 80}ms`, animationFillMode: 'both' }}
+                  onClick={() => setSelectedCol(col)}>
+                  <div className="flex items-start justify-between">
+                    <div className="min-w-0 flex-1">
+                      <h4 className="font-semibold text-sm truncate">{col}</h4>
+                      <div className="flex items-center gap-1 mt-0.5">
+                        {trendIcon}
+                        <span className="text-xs text-muted-foreground">
+                          {stats.mean > stats.median ? 'Right-skewed' : stats.mean < stats.median ? 'Left-skewed' : 'Symmetric'}
+                        </span>
+                      </div>
+                    </div>
+                    <ProgressRing percent={completeness} size={40} strokeWidth={3} />
+                  </div>
+                  <div className="grid grid-cols-2 gap-2 text-xs">
+                    <div className="flex items-center gap-1.5"><Hash className="w-3 h-3 text-muted-foreground" /><span className="text-muted-foreground">Mean:</span><span className="font-medium">{stats.mean.toFixed(2)}</span></div>
+                    <div className="flex items-center gap-1.5"><Activity className="w-3 h-3 text-muted-foreground" /><span className="text-muted-foreground">Std:</span><span className="font-medium">{stats.stdDev.toFixed(2)}</span></div>
+                    <div className="flex items-center gap-1.5"><TrendingUp className="w-3 h-3 text-muted-foreground" /><span className="text-muted-foreground">Min:</span><span className="font-medium">{stats.min.toFixed(2)}</span></div>
+                    <div className="flex items-center gap-1.5"><BarChart3 className="w-3 h-3 text-muted-foreground" /><span className="text-muted-foreground">Max:</span><span className="font-medium">{stats.max.toFixed(2)}</span></div>
+                  </div>
+                  <div className="flex items-center justify-between text-[10px] text-muted-foreground pt-1 border-t border-border/50">
+                    <span>{stats.uniqueCount} unique</span>
+                    <span>IQR: {stats.iqr.toFixed(2)}</span>
+                    <Badge variant="outline" className="text-[9px] px-1 py-0">Q1: {stats.q1.toFixed(1)} | Q3: {stats.q3.toFixed(1)}</Badge>
+                  </div>
+                </Card>
+              );
+            })}
           </div>
-          <div>
-            <h3 className="text-lg font-semibold">{getAnalysisTitle()}</h3>
-            <p className="text-sm text-muted-foreground">
-              {type === 'descriptive' && "What happened in your data"}
-              {type === 'diagnostic' && "Why did it happen"}
-              {type === 'prescriptive' && "What should you do"}
-              {type === 'comprehensive' && "Complete statistical overview"}
-            </p>
-          </div>
-        </div>
+        </TabsContent>
 
-        <Tabs defaultValue="overview" className="w-full">
-          <TabsList className="grid w-full grid-cols-4">
-            <TabsTrigger value="overview">Overview</TabsTrigger>
-            <TabsTrigger value="distributions">Distributions</TabsTrigger>
-            <TabsTrigger value="correlations">Correlations</TabsTrigger>
-            <TabsTrigger value="insights">Insights</TabsTrigger>
-          </TabsList>
+        <TabsContent value="distributions">
+          <Card className="p-6 animate-fade-in">
+            <div className="flex items-center justify-between mb-4">
+              <h4 className="font-semibold text-sm flex items-center gap-2">
+                <BarChart3 className="w-4 h-4 text-primary" />
+                Distribution: {selectedCol || numericColumns[0] || 'N/A'}
+              </h4>
+              <div className="flex gap-1 flex-wrap">
+                {numericColumns.slice(0, 6).map(col => (
+                  <Badge key={col} variant={col === (selectedCol || numericColumns[0]) ? "default" : "outline"}
+                    className="cursor-pointer text-[10px] px-2 py-0.5 transition-all hover:scale-105"
+                    onClick={() => setSelectedCol(col)}>
+                    {col.length > 10 ? col.slice(0, 10) + '…' : col}
+                  </Badge>
+                ))}
+              </div>
+            </div>
+            <div className="h-72">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={distributionData} barCategoryGap="8%">
+                  <defs>
+                    <linearGradient id="barGradient" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stopColor="hsl(var(--chart-1))" stopOpacity={0.9} />
+                      <stop offset="100%" stopColor="hsl(var(--chart-1))" stopOpacity={0.4} />
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.5} />
+                  <XAxis dataKey="range" tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))' }} />
+                  <YAxis tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))' }} />
+                  <Tooltip contentStyle={{ backgroundColor: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', borderRadius: '8px', fontSize: '12px' }}
+                    formatter={(value: any) => [value, 'Count']} />
+                  <Bar dataKey="count" fill="url(#barGradient)" radius={[4, 4, 0, 0]} animationDuration={800}>
+                    {distributionData.map((_, i) => (<Cell key={i} />))}
+                  </Bar>
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          </Card>
+        </TabsContent>
 
-          <TabsContent value="overview" className="mt-6">
-            <div className="space-y-4">
-              {statistics.map((stat) => (
-                <Card key={stat.column} className="p-4">
-                  <div className="flex items-center justify-between mb-3">
-                    <h4 className="font-medium">{stat.column}</h4>
-                    <Badge variant={stat.type === 'numeric' ? 'default' : 'secondary'}>
-                      {stat.type}
-                    </Badge>
+        <TabsContent value="correlations">
+          <Card className="p-6 animate-fade-in">
+            <h4 className="font-semibold text-sm flex items-center gap-2 mb-4">
+              <TrendingUp className="w-4 h-4 text-primary" />
+              Correlation Matrix
+            </h4>
+            {displayCols.length > 1 ? (
+              <div className="overflow-x-auto">
+                <div className="inline-block min-w-fit">
+                  <div className="flex items-end mb-1" style={{ paddingLeft: '80px' }}>
+                    {displayCols.map(col => (
+                      <div key={col} className="w-12 text-[9px] text-muted-foreground text-center truncate px-0.5" title={col}>{col.slice(0, 6)}</div>
+                    ))}
                   </div>
-                  
-                  <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4 text-sm">
-                    <div>
-                      <span className="text-muted-foreground">Count:</span>
-                      <div className="font-medium">{stat.count}</div>
-                    </div>
-                    <div>
-                      <span className="text-muted-foreground">Missing:</span>
-                      <div className="font-medium">{stat.missing}</div>
-                    </div>
-                    <div>
-                      <span className="text-muted-foreground">Unique:</span>
-                      <div className="font-medium">{stat.unique}</div>
-                    </div>
-                    
-                    {stat.type === 'numeric' ? (
-                      <>
-                        <div>
-                          <span className="text-muted-foreground">Mean:</span>
-                          <div className="font-medium">{stat.mean?.toFixed(2)}</div>
-                        </div>
-                        <div>
-                          <span className="text-muted-foreground">Std:</span>
-                          <div className="font-medium">{stat.std?.toFixed(2)}</div>
-                        </div>
-                        <div>
-                          <span className="text-muted-foreground">Range:</span>
-                          <div className="font-medium">{stat.min?.toFixed(1)} - {stat.max?.toFixed(1)}</div>
-                        </div>
-                      </>
-                    ) : (
-                      <div>
-                        <span className="text-muted-foreground">Mode:</span>
-                        <div className="font-medium">{stat.mode}</div>
+                  {displayCols.map((rowCol, ri) => (
+                    <div key={rowCol} className="flex items-center gap-1 mb-1">
+                      <div className="w-[76px] text-[10px] text-muted-foreground text-right pr-1 truncate shrink-0" title={rowCol}>
+                        {rowCol.length > 10 ? rowCol.slice(0, 10) + '…' : rowCol}
                       </div>
-                    )}
-                  </div>
-                </Card>
-              ))}
-            </div>
-          </TabsContent>
-
-          <TabsContent value="distributions" className="mt-6">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              {statistics.filter(s => s.type === 'numeric' && s.distribution).map((stat) => (
-                <Card key={stat.column} className="p-4">
-                  <h4 className="font-medium mb-4">{stat.column} Distribution</h4>
-                  <div className="h-48">
-                    <ResponsiveContainer width="100%" height="100%">
-                      <BarChart data={stat.distribution}>
-                        <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                        <XAxis dataKey="bin" stroke="hsl(var(--muted-foreground))" fontSize={10} />
-                        <YAxis stroke="hsl(var(--muted-foreground))" />
-                        <Tooltip 
-                          contentStyle={{ 
-                            backgroundColor: 'hsl(var(--background))', 
-                            border: '1px solid hsl(var(--border))'
-                          }} 
-                        />
-                        <Bar dataKey="count" fill="hsl(var(--primary))" />
-                      </BarChart>
-                    </ResponsiveContainer>
-                  </div>
-                  <div className="mt-2 text-xs text-muted-foreground">
-                    Skewness: {stat.skewness?.toFixed(2)} | Kurtosis: {stat.kurtosis?.toFixed(2)}
-                  </div>
-                </Card>
-              ))}
-            </div>
-          </TabsContent>
-
-          <TabsContent value="correlations" className="mt-6">
-            <div className="space-y-4">
-              {correlations.slice(0, 10).map((corr, index) => (
-                <Card key={index} className="p-4">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <div className="font-medium">{corr.col1} ↔ {corr.col2}</div>
-                      <div className="text-sm text-muted-foreground">
-                        {corr.strength} correlation
-                      </div>
+                      {displayCols.map((colCol, ci) => (
+                        <div key={colCol} className="w-12 shrink-0">
+                          <HeatmapCell value={correlationMatrix[ri]?.[ci] ?? 0} label={`${rowCol} × ${colCol}`} />
+                        </div>
+                      ))}
                     </div>
-                    <div className="text-right">
-                      <div className="text-lg font-bold">
-                        {(corr.correlation * 100).toFixed(1)}%
-                      </div>
-                      <Badge 
-                        variant={
-                          Math.abs(corr.correlation) > 0.7 ? 'destructive' : 
-                          Math.abs(corr.correlation) > 0.3 ? 'default' : 'secondary'
-                        }
-                      >
-                        {corr.strength}
-                      </Badge>
-                    </div>
+                  ))}
+                  <div className="flex items-center justify-center gap-4 mt-4 text-[10px] text-muted-foreground">
+                    <div className="flex items-center gap-1"><div className="w-3 h-3 rounded" style={{ backgroundColor: 'hsl(var(--destructive) / 0.6)' }} /><span>Negative</span></div>
+                    <div className="flex items-center gap-1"><div className="w-3 h-3 rounded" style={{ backgroundColor: 'hsl(var(--muted) / 0.3)' }} /><span>None</span></div>
+                    <div className="flex items-center gap-1"><div className="w-3 h-3 rounded" style={{ backgroundColor: 'hsl(var(--accent) / 0.6)' }} /><span>Positive</span></div>
                   </div>
-                </Card>
-              ))}
-            </div>
-          </TabsContent>
+                </div>
+              </div>
+            ) : (
+              <p className="text-sm text-muted-foreground text-center py-8">Need at least 2 numeric columns for correlation analysis</p>
+            )}
+          </Card>
+        </TabsContent>
 
-          <TabsContent value="insights" className="mt-6">
-            <div className="space-y-4">
-              {insights.map((insight, index) => (
-                <Card key={index} className="p-4">
-                  <div className="flex items-start space-x-3">
-                    <AlertTriangle className="w-5 h-5 text-primary mt-0.5" />
-                    <div className="text-sm">{insight}</div>
+        <TabsContent value="boxplots">
+          <Card className="p-6 animate-fade-in">
+            <h4 className="font-semibold text-sm flex items-center gap-2 mb-4">
+              <Activity className="w-4 h-4 text-primary" />
+              Box Plot Summary
+            </h4>
+            {boxPlotData.length > 0 ? (
+              <div className="h-72">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={boxPlotData} barCategoryGap="20%">
+                    <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.5} />
+                    <XAxis dataKey="name" tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))' }} />
+                    <YAxis tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))' }} />
+                    <Tooltip contentStyle={{ backgroundColor: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', borderRadius: '8px', fontSize: '12px' }}
+                      formatter={(value: any, name: string) => {
+                        const labels: Record<string, string> = { base: 'Q1', iqrHeight: 'IQR' };
+                        return [typeof value === 'number' ? value.toFixed(2) : value, labels[name] || name];
+                      }} />
+                    <Bar dataKey="base" stackId="box" fill="transparent" />
+                    <Bar dataKey="iqrHeight" stackId="box" radius={[4, 4, 0, 0]} animationDuration={800}>
+                      {boxPlotData.map((_, i) => (<Cell key={i} fill={GRADIENT_COLORS[i % GRADIENT_COLORS.length]} fillOpacity={0.7} />))}
+                    </Bar>
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+            ) : (
+              <p className="text-sm text-muted-foreground text-center py-8">No numeric columns available</p>
+            )}
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 mt-4">
+              {boxPlotData.map((bp: any, i) => (
+                <div key={i} className="text-[10px] p-2 rounded-lg bg-muted/30 border border-border/50">
+                  <span className="font-medium">{bp.fullName}</span>
+                  <div className="flex justify-between mt-1 text-muted-foreground">
+                    <span>Med: {bp.median.toFixed(1)}</span>
+                    <span>IQR: {bp.iqrHeight.toFixed(1)}</span>
                   </div>
-                </Card>
+                </div>
               ))}
-              
-              {insights.length === 0 && (
-                <Card className="p-8 text-center">
-                  <PieChart className="w-8 h-8 mx-auto mb-4 text-muted-foreground" />
-                  <p className="text-muted-foreground">No specific insights generated for this analysis type</p>
-                </Card>
-              )}
             </div>
-          </TabsContent>
-        </Tabs>
-      </Card>
+          </Card>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 };

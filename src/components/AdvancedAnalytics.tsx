@@ -1,158 +1,99 @@
 import { useState } from "react";
 import { Card } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Badge } from "@/components/ui/badge";
-import { 
-  Brain, 
-  TrendingUp, 
-  Target, 
-  Users, 
-  Calculator,
-  BarChart3,
-  Zap,
-  LineChart,
-  Layers
-} from "lucide-react";
-import { PredictiveAnalytics } from "./PredictiveAnalytics";
-import { ClusterAnalysis } from "./ClusterAnalysis";
-import { StatisticalAnalysis } from "./StatisticalAnalysis";
 import { CohortAnalysis } from "./CohortAnalysis";
+import { ClusterAnalysis } from "./ClusterAnalysis";
 import { RegressionAnalysis } from "./RegressionAnalysis";
+import { DataQualityScanner } from "./DataQualityScanner";
+import { PredictiveAnalytics } from "./PredictiveAnalytics";
+import { StatisticalAnalysis } from "./StatisticalAnalysis";
+import {
+  BarChart3, Users, Boxes, TrendingUp, Shield, Brain
+} from "lucide-react";
 
 interface AdvancedAnalyticsProps {
   data: any[];
 }
 
+const ANALYTICS_TYPES = [
+  { id: 'statistical', label: 'Statistical', icon: BarChart3, description: 'Descriptive stats & distributions', color: 'hsl(var(--chart-1))' },
+  { id: 'predictive', label: 'Predictive', icon: Brain, description: 'Forecast & trend analysis', color: 'hsl(var(--chart-2))' },
+  { id: 'regression', label: 'Regression', icon: TrendingUp, description: 'Variable relationships', color: 'hsl(var(--chart-3))' },
+  { id: 'cohort', label: 'Cohort', icon: Users, description: 'Group-based analysis', color: 'hsl(var(--chart-4))' },
+  { id: 'cluster', label: 'Cluster', icon: Boxes, description: 'Pattern discovery', color: 'hsl(var(--chart-5))' },
+  { id: 'quality', label: 'Data Quality', icon: Shield, description: 'Data health & validation', color: 'hsl(var(--accent))' },
+];
+
 export const AdvancedAnalytics = ({ data }: AdvancedAnalyticsProps) => {
-  const [activeAnalysis, setActiveAnalysis] = useState("descriptive");
+  const [selectedType, setSelectedType] = useState('statistical');
 
-  if (!data || data.length === 0) return null;
-
-  const analyticsTypes = [
-    {
-      id: "descriptive",
-      name: "Descriptive Analytics",
-      icon: <BarChart3 className="w-4 h-4" />,
-      description: "What happened in your data",
-      color: "from-blue-500/20 to-blue-600/20"
-    },
-    {
-      id: "diagnostic",
-      name: "Diagnostic Analytics", 
-      icon: <Target className="w-4 h-4" />,
-      description: "Why did it happen",
-      color: "from-green-500/20 to-green-600/20"
-    },
-    {
-      id: "predictive",
-      name: "Predictive Analytics",
-      icon: <TrendingUp className="w-4 h-4" />,
-      description: "What will happen next",
-      color: "from-purple-500/20 to-purple-600/20"
-    },
-    {
-      id: "prescriptive",
-      name: "Prescriptive Analytics",
-      icon: <Brain className="w-4 h-4" />,
-      description: "What should we do",
-      color: "from-orange-500/20 to-orange-600/20"
-    },
-    {
-      id: "cluster",
-      name: "Cluster Analysis",
-      icon: <Users className="w-4 h-4" />,
-      description: "Group similar data points",
-      color: "from-red-500/20 to-red-600/20"
-    },
-    {
-      id: "statistical",
-      name: "Statistical Analysis",
-      icon: <Calculator className="w-4 h-4" />,
-      description: "Deep statistical insights",
-      color: "from-teal-500/20 to-teal-600/20"
+  const renderContent = () => {
+    switch (selectedType) {
+      case 'statistical': return <StatisticalAnalysis data={data} />;
+      case 'predictive': return <PredictiveAnalytics data={data} />;
+      case 'regression': return <RegressionAnalysis data={data} />;
+      case 'cohort': return <CohortAnalysis data={data} />;
+      case 'cluster': return <ClusterAnalysis data={data} />;
+      case 'quality': return <DataQualityScanner data={data} />;
+      default: return <StatisticalAnalysis data={data} />;
     }
-  ];
+  };
 
   return (
-    <Card className="p-6 space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center space-x-3">
-          <div className="w-8 h-8 bg-gradient-to-br from-primary/20 to-accent/20 rounded-lg flex items-center justify-center">
-            <Layers className="w-4 h-4 text-primary" />
-          </div>
-          <div>
-            <h3 className="text-lg font-semibold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
-              Advanced Analytics Suite
-            </h3>
-            <p className="text-sm text-muted-foreground">
-              Comprehensive data analysis with AI-powered insights
-            </p>
-          </div>
-        </div>
-        
-        <Badge variant="outline" className="bg-gradient-to-r from-primary/10 to-accent/10">
-          <Zap className="w-3 h-3 mr-1" />
-          AI-Powered
-        </Badge>
+    <div className="space-y-6">
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+        {ANALYTICS_TYPES.map((type) => {
+          const Icon = type.icon;
+          const isActive = selectedType === type.id;
+          return (
+            <Card
+              key={type.id}
+              className={`p-3.5 cursor-pointer transition-all duration-300 group relative overflow-hidden ${
+                isActive
+                  ? 'border-primary/40 shadow-md scale-[1.02]'
+                  : 'hover:border-primary/20 hover:shadow-sm hover:scale-[1.01]'
+              }`}
+              onClick={() => setSelectedType(type.id)}
+            >
+              {isActive && (
+                <div
+                  className="absolute inset-0 opacity-[0.06] rounded-lg"
+                  style={{ background: `radial-gradient(ellipse at top left, ${type.color}, transparent 70%)` }}
+                />
+              )}
+              <div className="relative z-10">
+                <div className="flex items-center gap-2 mb-1.5">
+                  <div
+                    className={`w-8 h-8 rounded-lg flex items-center justify-center transition-all duration-300 ${
+                      isActive ? 'scale-110' : 'group-hover:scale-105'
+                    }`}
+                    style={{
+                      backgroundColor: isActive ? `${type.color}20` : 'hsl(var(--muted) / 0.5)',
+                      color: isActive ? type.color : 'hsl(var(--muted-foreground))',
+                    }}
+                  >
+                    <Icon className="w-4 h-4" />
+                  </div>
+                  {isActive && (
+                    <span className="relative flex h-2 w-2">
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full opacity-75"
+                        style={{ backgroundColor: type.color }} />
+                      <span className="relative inline-flex rounded-full h-2 w-2"
+                        style={{ backgroundColor: type.color }} />
+                    </span>
+                  )}
+                </div>
+                <h4 className={`text-xs font-semibold transition-colors ${
+                  isActive ? 'text-foreground' : 'text-muted-foreground group-hover:text-foreground'
+                }`}>{type.label}</h4>
+                <p className="text-[10px] text-muted-foreground mt-0.5 leading-tight">{type.description}</p>
+              </div>
+            </Card>
+          );
+        })}
       </div>
-
-      {/* Analytics Type Selector */}
-      <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-        {analyticsTypes.map((type) => (
-          <button
-            key={type.id}
-            onClick={() => setActiveAnalysis(type.id)}
-            className={`p-4 rounded-lg border transition-all duration-300 hover:scale-105 text-left ${
-              activeAnalysis === type.id 
-                ? 'border-primary bg-gradient-to-br ' + type.color + ' shadow-lg' 
-                : 'border-border hover:border-primary/50'
-            }`}
-          >
-            <div className="flex items-center space-x-2 mb-2">
-              {type.icon}
-              <span className="font-medium text-sm">{type.name}</span>
-            </div>
-            <p className="text-xs text-muted-foreground">{type.description}</p>
-          </button>
-        ))}
+      <div className="animate-fade-in" key={selectedType}>
+        {renderContent()}
       </div>
-
-      {/* Analytics Content */}
-      <div className="min-h-[400px]">
-        <Tabs value={activeAnalysis} onValueChange={setActiveAnalysis} className="w-full">
-          <TabsList className="hidden" />
-          
-          <TabsContent value="descriptive" className="mt-4">
-            <StatisticalAnalysis data={data} type="descriptive" />
-          </TabsContent>
-          
-          <TabsContent value="diagnostic" className="mt-4">
-            <StatisticalAnalysis data={data} type="diagnostic" />
-          </TabsContent>
-          
-          <TabsContent value="predictive" className="mt-4">
-            <PredictiveAnalytics data={data} />
-          </TabsContent>
-          
-          <TabsContent value="prescriptive" className="mt-4">
-            <StatisticalAnalysis data={data} type="prescriptive" />
-          </TabsContent>
-          
-          <TabsContent value="cluster" className="mt-4">
-            <ClusterAnalysis data={data} />
-          </TabsContent>
-          
-          <TabsContent value="statistical" className="mt-4">
-            <div className="space-y-6">
-              <StatisticalAnalysis data={data} type="comprehensive" />
-              <RegressionAnalysis data={data} />
-              <CohortAnalysis data={data} />
-            </div>
-          </TabsContent>
-        </Tabs>
-      </div>
-    </Card>
+    </div>
   );
 };
