@@ -1,6 +1,13 @@
 import { BarChart3, Database, Download, Sparkles } from "lucide-react";
 
-export const Header = () => {
+interface HeaderProps {
+  onScrollToAI?: () => void;
+  onScrollToUpload?: () => void;
+  onExport?: () => void;
+  hasData?: boolean;
+}
+
+export const Header = ({ onScrollToAI, onScrollToUpload, onExport, hasData }: HeaderProps) => {
   return (
     <header className="border-b bg-card/80 backdrop-blur-md sticky top-0 z-50">
       <div className="container mx-auto px-6 py-3">
@@ -21,21 +28,32 @@ export const Header = () => {
           </div>
           
           <nav className="hidden md:flex items-center space-x-1">
-            <div className="flex items-center space-x-1.5 text-xs text-muted-foreground px-3 py-1.5 rounded-lg
-                          hover:text-foreground hover:bg-muted/50 transition-all duration-200 cursor-pointer">
+            <button
+              onClick={onScrollToAI}
+              disabled={!hasData}
+              className={`flex items-center space-x-1.5 text-xs px-3 py-1.5 rounded-lg transition-all duration-200
+                ${hasData ? 'text-muted-foreground hover:text-foreground hover:bg-muted/50 cursor-pointer active:scale-95' : 'text-muted-foreground/40 cursor-not-allowed'}`}
+            >
               <Sparkles className="w-3.5 h-3.5" />
               <span>AI Analytics</span>
-            </div>
-            <div className="flex items-center space-x-1.5 text-xs text-muted-foreground px-3 py-1.5 rounded-lg
-                          hover:text-foreground hover:bg-muted/50 transition-all duration-200 cursor-pointer">
+            </button>
+            <button
+              onClick={onScrollToUpload}
+              className="flex items-center space-x-1.5 text-xs text-muted-foreground px-3 py-1.5 rounded-lg
+                        hover:text-foreground hover:bg-muted/50 transition-all duration-200 cursor-pointer active:scale-95"
+            >
               <Database className="w-3.5 h-3.5" />
               <span>CSV / XML</span>
-            </div>
-            <div className="flex items-center space-x-1.5 text-xs text-muted-foreground px-3 py-1.5 rounded-lg
-                          hover:text-foreground hover:bg-muted/50 transition-all duration-200 cursor-pointer">
+            </button>
+            <button
+              onClick={onExport}
+              disabled={!hasData}
+              className={`flex items-center space-x-1.5 text-xs px-3 py-1.5 rounded-lg transition-all duration-200
+                ${hasData ? 'text-muted-foreground hover:text-foreground hover:bg-muted/50 cursor-pointer active:scale-95' : 'text-muted-foreground/40 cursor-not-allowed'}`}
+            >
               <Download className="w-3.5 h-3.5" />
               <span>Export</span>
-            </div>
+            </button>
           </nav>
         </div>
       </div>

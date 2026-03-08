@@ -1,5 +1,6 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useRef } from "react";
 import { Header } from "@/components/Header";
+import Papa from "papaparse";
 import { FileUpload } from "@/components/FileUpload";
 import { DataPreview } from "@/components/DataPreview";
 import { MissingValueHandler } from "@/components/MissingValueHandler";
