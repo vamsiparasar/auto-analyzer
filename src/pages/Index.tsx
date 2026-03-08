@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { Header } from "@/components/Header";
 import { FileUpload } from "@/components/FileUpload";
 import { DataPreview } from "@/components/DataPreview";
@@ -10,16 +10,27 @@ import { SmartChartRecommendations } from "@/components/SmartChartRecommendation
 import { DataQualityScanner } from "@/components/DataQualityScanner";
 import { AdvancedAnalytics } from "@/components/AdvancedAnalytics";
 import { Toaster } from "@/components/ui/sonner";
+import { ChartType } from "@/components/ChartSelector";
+import { toast } from "sonner";
+
+interface DashboardChart {
+  id: string;
+  type: ChartType;
+  column?: string;
+  title: string;
+}
 
 const Index = () => {
   const [uploadedData, setUploadedData] = useState<any>(null);
   const [cleanedData, setCleanedData] = useState<any>(null);
   const [fileName, setFileName] = useState<string>("");
+  const [dashboardCharts, setDashboardCharts] = useState<DashboardChart[]>([]);
 
   const handleFileUpload = (data: any, name: string) => {
     setUploadedData(data);
     setCleanedData(null);
     setFileName(name);
+    setDashboardCharts([]);
   };
 
   const handleDataCleaned = (data: any) => {
@@ -30,7 +41,19 @@ const Index = () => {
     setUploadedData(null);
     setCleanedData(null);
     setFileName("");
+    setDashboardCharts([]);
   };
+
+  const handleAddChartToDashboard = useCallback((chartType: ChartType, column?: string) => {
+    const newChart: DashboardChart = {
+      id: Date.now().toString(),
+      type: chartType,
+      column,
+      title: `${chartType.charAt(0).toUpperCase() + chartType.slice(1).replace('-', ' ')} Chart`
+    };
+    setDashboardCharts(prev => [...prev, newChart]);
+    toast.success(`Added ${chartType} chart to dashboard`);
+  }, []);
 
   const currentData = cleanedData || uploadedData;
 
@@ -115,15 +138,16 @@ const Index = () => {
               <div className="animate-slide-up" style={{ animationDelay: '0.3s' }}>
                 <SmartChartRecommendations 
                   data={currentData}
-                  onChartAdd={(chartType, column) => {
-                    // This will be handled by the CustomDashboard component
-                    console.log('Chart recommendation:', chartType, column);
-                  }}
+                  onChartAdd={handleAddChartToDashboard}
                 />
               </div>
               
               <div className="animate-slide-up" style={{ animationDelay: '0.35s' }}>
-                <CustomDashboard data={currentData} />
+                <CustomDashboard 
+                  data={currentData}
+                  externalCharts={dashboardCharts}
+                  onChartsChange={setDashboardCharts}
+                />
               </div>
 
               <div className="animate-slide-up" style={{ animationDelay: '0.4s' }}>
