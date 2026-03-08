@@ -40,6 +40,8 @@ const Index = () => {
     fileUploadRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   }, [uploadedData]);
 
+  const currentData = cleanedData || uploadedData;
+
   const handleExport = useCallback(() => {
     if (!currentData) return;
     const csv = Papa.unparse(currentData);
