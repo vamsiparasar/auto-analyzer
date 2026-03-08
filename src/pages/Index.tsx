@@ -90,7 +90,7 @@ const Index = () => {
       <Header onScrollToAI={handleScrollToAI} onScrollToUpload={handleScrollToUpload} onExport={handleExport} hasData={!!uploadedData} />
       <main className="container mx-auto px-6 py-8">
         {!uploadedData ? (
-          <div className="max-w-4xl mx-auto">
+          <div className="max-w-4xl mx-auto" ref={fileUploadRef}>
             <div className="text-center mb-12 animate-fade-in">
               <h1 className="text-4xl md:text-5xl font-bold mb-4 bg-gradient-to-r from-primary via-accent to-primary 
                            bg-clip-text text-transparent animate-float leading-tight">
