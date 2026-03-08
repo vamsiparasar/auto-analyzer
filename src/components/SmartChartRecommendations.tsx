@@ -5,7 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { ChartType } from "./ChartSelector";
 import { 
   BarChart3, LineChart, PieChart, Activity,
-  TrendingUp, Zap, Star, CheckCircle
+  TrendingUp, Zap, Star, CheckCircle, Plus
 } from "lucide-react";
 import { useDataAnalysis, calculateCorrelation } from "@/hooks/useDataAnalysis";
 
