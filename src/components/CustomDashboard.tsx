@@ -128,7 +128,7 @@ export const CustomDashboard = ({ data, externalCharts, onChartsChange }: Custom
                 </div>
                 <div className="flex items-center gap-2">
                   {allColumns.length > 0 && (
-                    <Select value={chart.column || ''} onValueChange={(val) => handleColumnChange(chart.id, val)}>
+                    <Select value={chart.column || undefined} onValueChange={(val) => handleColumnChange(chart.id, val)}>
                       <SelectTrigger className="h-7 text-xs w-[120px]">
                         <SelectValue placeholder="Column" />
                       </SelectTrigger>
