@@ -1,5 +1,6 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useRef } from "react";
 import { Header } from "@/components/Header";
+import Papa from "papaparse";
 import { FileUpload } from "@/components/FileUpload";
 import { DataPreview } from "@/components/DataPreview";
 import { MissingValueHandler } from "@/components/MissingValueHandler";
@@ -25,6 +26,34 @@ const Index = () => {
   const [cleanedData, setCleanedData] = useState<any>(null);
   const [fileName, setFileName] = useState<string>("");
   const [dashboardCharts, setDashboardCharts] = useState<DashboardChart[]>([]);
+  const aiInsightsRef = useRef<HTMLDivElement>(null);
+  const fileUploadRef = useRef<HTMLDivElement>(null);
+
+  const handleScrollToAI = useCallback(() => {
+    aiInsightsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }, []);
+
+  const handleScrollToUpload = useCallback(() => {
+    if (uploadedData) {
+      handleReset();
+    }
+    fileUploadRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }, [uploadedData]);
+
+  const currentData = cleanedData || uploadedData;
+
+  const handleExport = useCallback(() => {
+    if (!currentData) return;
+    const csv = Papa.unparse(currentData);
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = fileName.replace(/\.[^.]+$/, '') + '_export.csv';
+    a.click();
+    URL.revokeObjectURL(url);
+    toast.success('Data exported successfully');
+  }, [currentData, fileName]);
 
   const handleFileUpload = (data: any, name: string) => {
     setUploadedData(data);
@@ -55,14 +84,13 @@ const Index = () => {
     toast.success(`Added ${chartType} chart to dashboard`);
   }, []);
 
-  const currentData = cleanedData || uploadedData;
 
   return (
     <div className="min-h-screen bg-background">
-      <Header />
+      <Header onScrollToAI={handleScrollToAI} onScrollToUpload={handleScrollToUpload} onExport={handleExport} hasData={!!uploadedData} />
       <main className="container mx-auto px-6 py-8">
         {!uploadedData ? (
-          <div className="max-w-4xl mx-auto">
+          <div className="max-w-4xl mx-auto" ref={fileUploadRef}>
             <div className="text-center mb-12 animate-fade-in">
               <h1 className="text-4xl md:text-5xl font-bold mb-4 bg-gradient-to-r from-primary via-accent to-primary 
                            bg-clip-text text-transparent animate-float leading-tight">
@@ -127,7 +155,7 @@ const Index = () => {
                 />
               </div>
 
-              <div className="animate-slide-up" style={{ animationDelay: '0.2s' }}>
+              <div ref={aiInsightsRef} className="animate-slide-up" style={{ animationDelay: '0.2s' }}>
                 <AIInsights data={currentData} />
               </div>
               
