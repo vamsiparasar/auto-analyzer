@@ -52,6 +52,8 @@ const Index = () => {
     URL.revokeObjectURL(url);
     toast.success('Data exported successfully');
   }, [currentData, fileName]);
+
+  const handleFileUpload = (data: any, name: string) => {
     setUploadedData(data);
     setCleanedData(null);
     setFileName(name);
