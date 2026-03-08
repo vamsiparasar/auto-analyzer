@@ -84,7 +84,6 @@ const Index = () => {
     toast.success(`Added ${chartType} chart to dashboard`);
   }, []);
 
-  const currentData = cleanedData || uploadedData;
 
   return (
     <div className="min-h-screen bg-background">
