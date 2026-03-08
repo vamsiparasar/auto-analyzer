@@ -198,6 +198,3 @@ export const SmartChartRecommendations = ({ data, onChartAdd }: SmartChartRecomm
     </Card>
   );
 };
-
-// Need Plus icon
-import { Plus } from "lucide-react";
