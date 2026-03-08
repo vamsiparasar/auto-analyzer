@@ -87,7 +87,7 @@ const Index = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <Header />
+      <Header onScrollToAI={handleScrollToAI} onScrollToUpload={handleScrollToUpload} onExport={handleExport} hasData={!!uploadedData} />
       <main className="container mx-auto px-6 py-8">
         {!uploadedData ? (
           <div className="max-w-4xl mx-auto">
