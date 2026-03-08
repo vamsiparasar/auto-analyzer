@@ -155,7 +155,7 @@ const Index = () => {
                 />
               </div>
 
-              <div className="animate-slide-up" style={{ animationDelay: '0.2s' }}>
+              <div ref={aiInsightsRef} className="animate-slide-up" style={{ animationDelay: '0.2s' }}>
                 <AIInsights data={currentData} />
               </div>
               
