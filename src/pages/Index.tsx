@@ -26,8 +26,32 @@ const Index = () => {
   const [cleanedData, setCleanedData] = useState<any>(null);
   const [fileName, setFileName] = useState<string>("");
   const [dashboardCharts, setDashboardCharts] = useState<DashboardChart[]>([]);
+  const aiInsightsRef = useRef<HTMLDivElement>(null);
+  const fileUploadRef = useRef<HTMLDivElement>(null);
 
-  const handleFileUpload = (data: any, name: string) => {
+  const handleScrollToAI = useCallback(() => {
+    aiInsightsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }, []);
+
+  const handleScrollToUpload = useCallback(() => {
+    if (uploadedData) {
+      handleReset();
+    }
+    fileUploadRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }, [uploadedData]);
+
+  const handleExport = useCallback(() => {
+    if (!currentData) return;
+    const csv = Papa.unparse(currentData);
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = fileName.replace(/\.[^.]+$/, '') + '_export.csv';
+    a.click();
+    URL.revokeObjectURL(url);
+    toast.success('Data exported successfully');
+  }, [currentData, fileName]);
     setUploadedData(data);
     setCleanedData(null);
     setFileName(name);
